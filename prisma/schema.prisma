@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Business {
+
+  id               String   @id @default(cuid())
+
+  businessName     String
+
+  email            String   @unique
+
+  whatsappNumber   String
+
+  accessToken      String
+
+  phoneNumberId    String
+
+  createdAt        DateTime @default(now())
+
+  leads            Lead[]
+
+  coachingConfig   CoachingConfig?
+}
+
+model Lead {
+
+  id               String   @id @default(cuid())
+
+  businessId       String
+
+  business         Business @relation(fields: [businessId], references: [id])
+
+  phone            String
+
+  studentName      String?
+
+  lastMessage      String
+
+  status           String   @default("new")
+
+  createdAt        DateTime @default(now())
+}
+
+model CoachingConfig {
+
+  id                 String @id @default(cuid())
+
+  businessId         String @unique
+
+  exams              String
+
+  feeStructure       String
+
+  batchDates         String
+
+  hostelInfo         String
+
+  locationText       String
+
+  locationLink       String
+
+  whyJoin            String
+
+  scholarshipInfo    String
+
+  contactNumber      String
+
+  business           Business @relation(fields: [businessId], references: [id])
+}
