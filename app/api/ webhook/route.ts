@@ -27,7 +27,7 @@ export async function GET(
 
   if (
     mode === "subscribe" &&
-    token === "myverifytoken"
+   token === process.env.WHATSAPP_VERIFY_TOKEN
   ) {
 
     return new Response(challenge, {
