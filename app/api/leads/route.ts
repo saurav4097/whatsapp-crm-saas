@@ -1,5 +1,4 @@
-import { prisma }
-from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 import { cookies }
 from "next/headers";
@@ -21,8 +20,7 @@ export async function GET() {
 
       return Response.json(
         {
-          error:
-            "Unauthorized",
+          error: "Unauthorized",
         },
         {
           status: 401,
@@ -30,7 +28,7 @@ export async function GET() {
       );
     }
 
-    // VERIFY TOKEN
+    // VERIFY SESSION
 
     const payload =
       await verifySession(
@@ -41,8 +39,7 @@ export async function GET() {
 
       return Response.json(
         {
-          error:
-            "Invalid session",
+          error: "Invalid session",
         },
         {
           status: 401,
@@ -53,7 +50,7 @@ export async function GET() {
     const businessId =
       payload.businessId as string;
 
-    // FETCH ONLY BUSINESS LEADS
+    // GET LEADS
 
     const leads =
       await prisma.lead.findMany({
@@ -67,11 +64,112 @@ export async function GET() {
         },
       });
 
+    // SMART LEAD SYSTEM
+
+    const formattedLeads =
+      leads.map((lead: any) => {
+
+        const msg =
+          lead.lastMessage
+          ?.toLowerCase() || "";
+
+        let status = "new";
+        let interestLevel = "Medium";
+        let courseInterested =
+          "Don't Know Yet";
+
+        // COURSE DETECTION
+
+        if (
+          msg.includes("jee")
+        ) {
+          courseInterested =
+            "JEE";
+        }
+
+        else if (
+          msg.includes("neet")
+        ) {
+          courseInterested =
+            "NEET";
+        }
+
+        else if (
+          msg.includes("upsc")
+        ) {
+          courseInterested =
+            "UPSC";
+        }
+
+        else if (
+          msg.includes("ssc")
+        ) {
+          courseInterested =
+            "SSC";
+        }
+
+        // HOT LEAD DETECTION
+
+        if (
+          msg.includes("admission") ||
+          msg.includes("join") ||
+          msg.includes("register") ||
+          msg.includes("call")
+        ) {
+
+          status = "hot";
+          interestLevel = "High";
+        }
+
+        // INTERESTED
+
+        else if (
+          msg.includes("fee") ||
+          msg.includes("fees") ||
+          msg.includes("batch") ||
+          msg.includes("hostel") ||
+          msg.includes("course")
+        ) {
+
+          status = "interested";
+          interestLevel = "Medium";
+        }
+
+        // LOW INTEREST
+
+        else {
+
+          status = "new";
+          interestLevel = "Low";
+        }
+
+        return {
+
+          id: lead.id,
+
+          phone: lead.phone,
+
+          lastMessage:
+            lead.lastMessage,
+
+          createdAt:
+            lead.createdAt,
+
+          status,
+
+          interestLevel,
+
+          courseInterested,
+        };
+      });
+
     return Response.json(
-      leads
+      formattedLeads
     );
 
   } catch (error) {
+
+    console.log(error);
 
     return Response.json(
       {
