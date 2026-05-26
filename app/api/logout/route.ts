@@ -1,8 +1,8 @@
 import { cookies }
 from "next/headers";
 
-import { NextResponse }
-from "next/server";
+import { redirect }
+from "next/navigation";
 
 export async function POST() {
 
@@ -10,10 +10,5 @@ export async function POST() {
     "session"
   );
 
-  return NextResponse.redirect(
-    new URL(
-      "/",
-      process.env.NEXT_PUBLIC_APP_URL
-    )
-  );
+  redirect("/");
 }
