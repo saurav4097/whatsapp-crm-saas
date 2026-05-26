@@ -9,6 +9,7 @@ from "next/headers";
 
 const secret =
   new TextEncoder().encode(
+    process.env.JWT_SECRET ||
     "supersecretkey"
   );
 
@@ -21,28 +22,57 @@ export async function POST(
     const body =
       await req.json();
 
+    const businessName =
+      body.businessName?.trim();
+
+    const email =
+      body.email?.trim();
+
+    const whatsappNumber =
+      body.whatsappNumber?.trim();
+
+    // VALIDATION
+
+    if (
+      !businessName ||
+      !email ||
+      !whatsappNumber
+    ) {
+
+      return Response.json(
+        {
+          error:
+            "Please fill all fields",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    // FIND BUSINESS
+
     const business =
       await prisma.business.findFirst({
 
         where: {
 
-          businessName:
-            body.businessName,
+          businessName,
 
-          email:
-            body.email,
+          email,
 
-          whatsappNumber:
-            body.whatsappNumber,
+          whatsappNumber,
         },
       });
+
+    // NOT FOUND
 
     if (!business) {
 
       return Response.json(
         {
           error:
-            "Business not found. Please setup first.",
+            "Business not found. Please check details.",
         },
         {
           status: 401,
@@ -50,7 +80,7 @@ export async function POST(
       );
     }
 
-    // CREATE TOKEN
+    // CREATE JWT
 
     const token =
       await new SignJWT({
@@ -63,11 +93,15 @@ export async function POST(
         alg: "HS256",
       })
 
-      .setExpirationTime("30d")
+      .setIssuedAt()
+
+      .setExpirationTime(
+        "30d"
+      )
 
       .sign(secret);
 
-    // STORE COOKIE
+    // SAVE COOKIE
 
     (await cookies()).set(
       "session",
@@ -75,12 +109,16 @@ export async function POST(
       {
         httpOnly: true,
 
-        secure: false,
+        secure:
+          process.env.NODE_ENV ===
+          "production",
+
+        sameSite: "lax",
+
+        path: "/",
 
         maxAge:
           60 * 60 * 24 * 30,
-
-        path: "/",
       }
     );
 
@@ -89,6 +127,8 @@ export async function POST(
     });
 
   } catch (error) {
+
+    console.log(error);
 
     return Response.json(
       {

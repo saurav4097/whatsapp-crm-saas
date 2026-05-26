@@ -48,8 +48,8 @@ export default async function DashboardPage() {
   // NOT LOGGED IN
 
   if (!session?.value) {
-    redirect("/");
-  }
+  redirect("/login");
+}
 
   // VERIFY SESSION
 
@@ -59,8 +59,8 @@ export default async function DashboardPage() {
     );
 
   if (!payload) {
-    redirect("/");
-  }
+  redirect("/login");
+}
 
   // FETCH LEADS
 
