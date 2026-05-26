@@ -1,7 +1,12 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 
 import { cookies }
 from "next/headers";
+
+import { redirect }
+from "next/navigation";
 
 import { verifySession }
 from "@/lib/auth";
@@ -42,33 +47,8 @@ export default async function DashboardPage() {
 
   // NOT LOGGED IN
 
-  if (!session) {
-
-    return (
-
-      <main className="min-h-screen bg-slate-950 flex items-center justify-center text-white p-6">
-
-        <div className="bg-slate-900 p-10 rounded-3xl text-center max-w-md w-full border border-slate-800">
-
-          <h1 className="text-4xl font-bold mb-4">
-            Dashboard Locked
-          </h1>
-
-          <p className="text-gray-400 mb-8">
-            Login to access your coaching leads dashboard.
-          </p>
-
-          <Link
-            href="/login"
-            className="bg-green-500 hover:bg-green-600 transition px-6 py-3 rounded-2xl inline-block font-semibold"
-          >
-            Login
-          </Link>
-
-        </div>
-
-      </main>
-    );
+  if (!session?.value) {
+    redirect("/");
   }
 
   // VERIFY SESSION
@@ -79,32 +59,7 @@ export default async function DashboardPage() {
     );
 
   if (!payload) {
-
-    return (
-
-      <main className="min-h-screen bg-slate-950 flex items-center justify-center text-white p-6">
-
-        <div className="bg-slate-900 p-10 rounded-3xl text-center max-w-md w-full border border-slate-800">
-
-          <h1 className="text-4xl font-bold mb-4">
-            Session Expired
-          </h1>
-
-          <p className="text-gray-400 mb-8">
-            Please login again.
-          </p>
-
-          <Link
-            href="/login"
-            className="bg-green-500 hover:bg-green-600 transition px-6 py-3 rounded-2xl inline-block font-semibold"
-          >
-            Login Again
-          </Link>
-
-        </div>
-
-      </main>
-    );
+    redirect("/");
   }
 
   // FETCH LEADS
@@ -122,7 +77,8 @@ export default async function DashboardPage() {
   const hotLeads =
     leads.filter(
       (lead: any) =>
-        lead.status === "hot"
+        lead.status === "hot" ||
+        lead.status === "very hot"
     ).length;
 
   const interestedLeads =
@@ -139,50 +95,69 @@ export default async function DashboardPage() {
 
   return (
 
-    <main className="min-h-screen bg-slate-950 text-white p-8">
+    <main className="min-h-screen bg-slate-950 text-white p-5 md:p-8">
 
       {/* TOP */}
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-12">
 
         <div>
 
-          <h1 className="text-5xl font-bold">
-            LeadPilot
+          <h1 className="text-4xl md:text-5xl font-black">
+
+            <span className="text-white">
+              Lead
+            </span>
+
+            <span className="text-green-500">
+              Pilot
+            </span>
+
           </h1>
 
-          <p className="text-gray-400 mt-2">
-            AI Student Lead Dashboard
+          <p className="text-gray-400 mt-2 text-sm md:text-base">
+            Student Lead Management Dashboard
           </p>
 
         </div>
 
-        <form
-          action="/api/logout"
-          method="POST"
-        >
+        <div className="flex items-center gap-4">
 
-          <button
-            className="bg-red-500 hover:bg-red-600 transition px-5 py-3 rounded-2xl font-semibold"
+          <Link
+            href="/"
+            className="border border-slate-700 hover:border-green-500 transition px-5 py-3 rounded-2xl font-semibold"
           >
-            Logout
-          </button>
+            Back To Home
+          </Link>
 
-        </form>
+          <form
+            action="/api/logout"
+            method="POST"
+          >
+
+            <button
+              className="bg-red-500 hover:bg-red-600 transition px-5 py-3 rounded-2xl font-semibold"
+            >
+              Logout
+            </button>
+
+          </form>
+
+        </div>
 
       </div>
 
       {/* STATS */}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-12">
 
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
 
           <p className="text-gray-400 text-sm">
-            Total Student Leads
+            Total Leads
           </p>
 
-          <h2 className="text-5xl font-bold mt-3">
+          <h2 className="text-5xl font-black mt-3">
             {totalLeads}
           </h2>
 
@@ -191,10 +166,10 @@ export default async function DashboardPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
 
           <p className="text-gray-400 text-sm">
-            New Leads
+            New Students
           </p>
 
-          <h2 className="text-5xl font-bold mt-3 text-blue-400">
+          <h2 className="text-5xl font-black mt-3 text-blue-400">
             {newLeads}
           </h2>
 
@@ -206,7 +181,7 @@ export default async function DashboardPage() {
             Interested Students
           </p>
 
-          <h2 className="text-5xl font-bold mt-3 text-yellow-400">
+          <h2 className="text-5xl font-black mt-3 text-yellow-400">
             {interestedLeads}
           </h2>
 
@@ -218,7 +193,7 @@ export default async function DashboardPage() {
             Hot Leads
           </p>
 
-          <h2 className="text-5xl font-bold mt-3 text-green-400">
+          <h2 className="text-5xl font-black mt-3 text-green-400">
             {hotLeads}
           </h2>
 
@@ -228,13 +203,13 @@ export default async function DashboardPage() {
 
       {/* LEADS */}
 
-      <div className="space-y-5">
+      <div className="space-y-6">
 
         {leads.length === 0 && (
 
-          <div className="bg-slate-900 border border-slate-800 p-10 rounded-3xl text-center">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center">
 
-            <h2 className="text-2xl font-bold mb-2">
+            <h2 className="text-2xl font-bold mb-3">
               No Leads Yet
             </h2>
 
@@ -252,33 +227,75 @@ export default async function DashboardPage() {
             className="bg-slate-900 border border-slate-800 hover:border-green-500 transition rounded-3xl p-6"
           >
 
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-8">
 
               {/* LEFT */}
 
-              <div className="space-y-4 flex-1">
+              <div className="flex-1">
 
-                <div>
+                {/* PHONE */}
 
-                  <p className="text-sm text-gray-500">
-                    Student WhatsApp
-                  </p>
+                <div className="flex items-center gap-4 mb-6">
 
-                  <h2 className="text-2xl font-bold mt-1">
-                    {lead.phone}
-                  </h2>
+                  <div className="h-14 w-14 rounded-full bg-green-500 text-black font-black flex items-center justify-center text-lg">
+
+                    {lead.phone.slice(-2)}
+
+                  </div>
+
+                  <div>
+
+                    <p className="text-sm text-gray-500">
+                      Student WhatsApp
+                    </p>
+
+                    <h2 className="text-2xl font-bold break-all">
+                      {lead.phone}
+                    </h2>
+
+                  </div>
 
                 </div>
 
-                <div>
+                {/* MESSAGE */}
 
-                  <p className="text-sm text-gray-500">
+                <div className="mb-5">
+
+                  <p className="text-sm text-gray-500 mb-2">
                     Last Student Message
                   </p>
 
-                  <p className="text-white mt-1">
-                    {lead.lastMessage}
-                  </p>
+                  <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700">
+
+                    <p className="text-white leading-relaxed break-words">
+                      {lead.lastMessage}
+                    </p>
+
+                  </div>
+
+                </div>
+
+                {/* EXTRA */}
+
+                <div className="flex flex-wrap gap-3">
+
+                  <div className="bg-slate-800 px-4 py-2 rounded-xl text-sm border border-slate-700">
+
+                    Messages:
+                    <span className="text-green-400 ml-2 font-bold">
+                      {lead.totalMessages}
+                    </span>
+
+                  </div>
+
+                  <div className="bg-slate-800 px-4 py-2 rounded-xl text-sm border border-slate-700">
+
+                    Status:
+                    <span className="text-yellow-400 ml-2 capitalize font-bold">
+                      {lead.status}
+                    </span>
+
+                  </div>
 
                 </div>
 
@@ -286,40 +303,52 @@ export default async function DashboardPage() {
 
               {/* RIGHT */}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 min-w-[350px]">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:w-[360px]">
 
-                <div className="bg-slate-800 rounded-2xl p-4">
+                {/* COURSE */}
 
-                  <p className="text-sm text-gray-400 mb-2">
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+
+                  <p className="text-sm text-gray-400 mb-3">
                     Interested Course
                   </p>
 
-                  <h3 className="text-xl font-bold text-green-400">
+                  <h3 className="text-xl font-black text-green-400 break-words">
+
                     {lead.courseInterested}
+
                   </h3>
 
                 </div>
 
-                <div className="bg-slate-800 rounded-2xl p-4">
+                {/* STAGE */}
 
-                  <p className="text-sm text-gray-400 mb-2">
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+
+                  <p className="text-sm text-gray-400 mb-3">
                     Lead Stage
                   </p>
 
-                  <h3 className="text-xl font-bold text-yellow-400 capitalize">
+                  <h3 className="text-xl font-black text-yellow-400 capitalize">
+
                     {lead.status}
+
                   </h3>
 
                 </div>
 
-                <div className="bg-slate-800 rounded-2xl p-4">
+                {/* INTEREST */}
 
-                  <p className="text-sm text-gray-400 mb-2">
+                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+
+                  <p className="text-sm text-gray-400 mb-3">
                     Interest Level
                   </p>
 
-                  <h3 className="text-xl font-bold text-blue-400">
+                  <h3 className="text-xl font-black text-blue-400">
+
                     {lead.interestLevel}
+
                   </h3>
 
                 </div>

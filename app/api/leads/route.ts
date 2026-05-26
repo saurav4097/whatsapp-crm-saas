@@ -10,7 +10,7 @@ export async function GET() {
 
   try {
 
-    // GET SESSION
+    // SESSION
 
     const session =
       (await cookies())
@@ -28,7 +28,7 @@ export async function GET() {
       );
     }
 
-    // VERIFY SESSION
+    // VERIFY
 
     const payload =
       await verifySession(
@@ -50,9 +50,9 @@ export async function GET() {
     const businessId =
       payload.businessId as string;
 
-    // GET LEADS
+    // GET ALL LEADS
 
-    const leads =
+    const allLeads =
       await prisma.lead.findMany({
 
         where: {
@@ -64,96 +64,158 @@ export async function GET() {
         },
       });
 
-    // SMART LEAD SYSTEM
+    // GROUP BY PHONE NUMBER
 
-    const formattedLeads =
-      leads.map((lead: any) => {
+    const groupedLeads:
+      Record<string, any[]> = {};
 
-        const msg =
-          lead.lastMessage
-          ?.toLowerCase() || "";
+    for (const lead of allLeads) {
 
-        let status = "new";
-        let interestLevel = "Medium";
-        let courseInterested =
-          "Don't Know Yet";
+      if (
+        !groupedLeads[lead.phone]
+      ) {
+
+        groupedLeads[
+          lead.phone
+        ] = [];
+      }
+
+      groupedLeads[
+        lead.phone
+      ].push(lead);
+    }
+
+    // FINAL LEADS
+
+    const finalLeads =
+      Object.entries(
+        groupedLeads
+      ).map(([phone, messages]) => {
+
+        // LAST MESSAGE
+
+        const latest =
+          messages[0];
+
+        const totalMessages =
+          messages.length;
+
+        const fullText =
+          messages
+            .map((m) =>
+              m.lastMessage
+              ?.toLowerCase()
+            )
+            .join(" ");
 
         // COURSE DETECTION
 
+        let courseInterested =
+          "Don't Know Yet";
+
         if (
-          msg.includes("jee")
+          fullText.includes("jee")
         ) {
           courseInterested =
             "JEE";
         }
 
         else if (
-          msg.includes("neet")
+          fullText.includes("neet")
         ) {
           courseInterested =
             "NEET";
         }
 
         else if (
-          msg.includes("upsc")
+          fullText.includes("upsc")
         ) {
           courseInterested =
             "UPSC";
         }
 
         else if (
-          msg.includes("ssc")
+          fullText.includes("ssc")
         ) {
           courseInterested =
             "SSC";
         }
 
-        // HOT LEAD DETECTION
+        // INTEREST LEVEL
+
+        let interestLevel =
+          "Low";
 
         if (
-          msg.includes("admission") ||
-          msg.includes("join") ||
-          msg.includes("register") ||
-          msg.includes("call")
+          totalMessages >= 3
         ) {
+          interestLevel =
+            "Medium";
+        }
 
+        if (
+          totalMessages >= 6
+        ) {
+          interestLevel =
+            "High";
+        }
+
+        // LEAD STAGE
+
+        let status = "new";
+
+        if (
+          totalMessages >= 2
+        ) {
+          status =
+            "interested";
+        }
+
+        if (
+          totalMessages >= 5
+        ) {
           status = "hot";
-          interestLevel = "High";
         }
 
-        // INTERESTED
+        // SUPER HOT KEYWORDS
 
-        else if (
-          msg.includes("fee") ||
-          msg.includes("fees") ||
-          msg.includes("batch") ||
-          msg.includes("hostel") ||
-          msg.includes("course")
+        if (
+          fullText.includes(
+            "admission"
+          ) ||
+
+          fullText.includes(
+            "join"
+          ) ||
+
+          fullText.includes(
+            "call me"
+          ) ||
+
+          fullText.includes(
+            "register"
+          )
         ) {
 
-          status = "interested";
-          interestLevel = "Medium";
-        }
+          status = "very hot";
 
-        // LOW INTEREST
-
-        else {
-
-          status = "new";
-          interestLevel = "Low";
+          interestLevel =
+            "Very High";
         }
 
         return {
 
-          id: lead.id,
+          id: latest.id,
 
-          phone: lead.phone,
+          phone,
+
+          totalMessages,
 
           lastMessage:
-            lead.lastMessage,
+            latest.lastMessage,
 
           createdAt:
-            lead.createdAt,
+            latest.createdAt,
 
           status,
 
@@ -164,7 +226,7 @@ export async function GET() {
       });
 
     return Response.json(
-      formattedLeads
+      finalLeads
     );
 
   } catch (error) {
