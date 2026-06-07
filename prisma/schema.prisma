@@ -8,68 +8,83 @@ datasource db {
 }
 
 model Business {
+  id String @id @default(cuid())
 
-  id               String   @id @default(cuid())
+  businessName String
 
-  businessName     String
+  businessType String
 
-  email            String   @unique
+  email String @unique
 
-  whatsappNumber   String
+  whatsappNumber String
 
-  accessToken      String
+  accessToken String
 
-  phoneNumberId    String
+  phoneNumberId String
 
-  createdAt        DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  leads            Lead[]
+  leads Lead[]
 
-  coachingConfig   CoachingConfig?
+  config BusinessConfig?
 }
 
 model Lead {
+  id String @id @default(cuid())
 
-  id               String   @id @default(cuid())
+  businessId String
 
-  businessId       String
+  business Business @relation(fields: [businessId], references: [id])
 
-  business         Business @relation(fields: [businessId], references: [id])
+  phone String
 
-  phone            String
+  customerName String?
 
-  studentName      String?
+  lastMessage String
 
-  lastMessage      String
+  status String @default("new")
 
-  status           String   @default("new")
+  followupSent Boolean @default(false)
 
-  createdAt        DateTime @default(now())
+  lastInteractionAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, phone])
 }
 
-model CoachingConfig {
+model BusinessConfig {
+  id String @id @default(cuid())
 
-  id                 String @id @default(cuid())
+  businessId String @unique
 
-  businessId         String @unique
+  defaultMessage String
 
-  exams              String
+  followupMessage String
 
-  feeStructure       String
+  followupDays Int @default(3)
 
-  batchDates         String
+  createdAt DateTime @default(now())
 
-  hostelInfo         String
+  updatedAt DateTime @updatedAt
 
-  locationText       String
+  business Business @relation(fields: [businessId], references: [id])
 
-  locationLink       String
+  keywordReplies KeywordReply[]
+}
 
-  whyJoin            String
+model KeywordReply {
+  id String @id @default(cuid())
 
-  scholarshipInfo    String
+  configId String
 
-  contactNumber      String
+  keyword String
 
-  business           Business @relation(fields: [businessId], references: [id])
+  reply String
+
+  config BusinessConfig @relation(fields: [configId], references: [id])
+
+  createdAt DateTime @default(now())
 }

@@ -72,14 +72,12 @@ export async function POST(
       )
     );
 
-    // GET MESSAGE OBJECT
+    // MESSAGE OBJECT
 
     const message =
       body?.entry?.[0]
       ?.changes?.[0]
       ?.value?.messages?.[0];
-
-    // IF NO MESSAGE
 
     if (!message) {
 
@@ -88,12 +86,12 @@ export async function POST(
       });
     }
 
-    // MESSAGE TEXT
+    // USER MESSAGE
 
     const incomingText =
       message.text?.body || "";
 
-    // USER NUMBER
+    // CUSTOMER NUMBER
 
     const from =
       message.from;
@@ -116,8 +114,6 @@ export async function POST(
         },
       });
 
-    // BUSINESS NOT FOUND
-
     if (!business) {
 
       return Response.json(
@@ -131,7 +127,58 @@ export async function POST(
       );
     }
 
-    // GENERATE AUTOMATED REPLY
+    // SAVE / UPDATE LEAD
+
+    await prisma.lead.upsert({
+
+      where: {
+
+        businessId_phone: {
+
+          businessId:
+            business.id,
+
+          phone: from,
+        },
+      },
+
+      update: {
+
+        lastMessage:
+          incomingText,
+
+        status:
+          "active",
+
+        followupSent:
+          false,
+
+        lastInteractionAt:
+          new Date(),
+      },
+
+      create: {
+
+        businessId:
+          business.id,
+
+        phone: from,
+
+        lastMessage:
+          incomingText,
+
+        status:
+          "new",
+
+        followupSent:
+          false,
+
+        lastInteractionAt:
+          new Date(),
+      },
+    });
+
+    // GENERATE REPLY
 
     const reply =
       await generateReply({
@@ -143,25 +190,7 @@ export async function POST(
           incomingText,
       });
 
-    // SAVE LEAD
-
-    await prisma.lead.create({
-
-      data: {
-
-        businessId:
-          business.id,
-
-        phone: from,
-
-        lastMessage:
-          incomingText,
-
-        status: "new",
-      },
-    });
-
-    // SEND WHATSAPP REPLY
+    // SEND REPLY
 
     await sendWhatsAppMessage({
 

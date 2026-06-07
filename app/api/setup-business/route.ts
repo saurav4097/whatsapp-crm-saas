@@ -10,8 +10,6 @@ export async function POST(
     const body =
       await req.json();
 
-    // CREATE BUSINESS
-
     const business =
       await prisma.business.create({
 
@@ -19,6 +17,9 @@ export async function POST(
 
           businessName:
             body.businessName,
+
+          businessType:
+            body.businessType,
 
           email:
             body.email,
@@ -34,45 +35,54 @@ export async function POST(
         },
       });
 
-    // CREATE CONFIG
+    const config =
+      await prisma.businessConfig.create({
 
-    await prisma.coachingConfig.create({
+        data: {
 
-      data: {
+          businessId:
+            business.id,
 
-        businessId:
-          business.id,
+          defaultMessage:
+            body.defaultMessage,
 
-        exams:
-          body.exams,
+          followupMessage:
+            body.followupMessage,
 
-        feeStructure:
-          body.feeStructure,
+          followupDays:
+            Number(
+              body.followupDays
+            ),
+        },
+      });
 
-        batchDates:
-          body.batchDates,
+    if (
+      body.keywords &&
+      body.keywords.length > 0
+    ) {
 
-        hostelInfo:
-          body.hostelInfo,
+      await prisma.keywordReply.createMany({
 
-        locationText:
-          body.locationText,
+        data:
 
-        locationLink:
-          body.locationLink,
+          body.keywords.map(
+            (item: any) => ({
 
-        whyJoin:
-          body.whyJoin,
+              configId:
+                config.id,
 
-        scholarshipInfo:
-          body.scholarshipInfo,
+              keyword:
+                item.keyword,
 
-        contactNumber:
-          body.contactNumber,
-      },
-    });
+              reply:
+                item.reply,
+            })
+          ),
+      });
+    }
 
     return Response.json({
+
       success: true,
     });
 

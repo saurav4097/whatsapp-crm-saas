@@ -1,7 +1,6 @@
 "use client";
 
-import { useState }
-from "react";
+import { useState } from "react";
 
 export default function SetupPage() {
 
@@ -11,9 +10,9 @@ export default function SetupPage() {
   const [formData, setFormData] =
     useState({
 
-      // BUSINESS
-
       businessName: "",
+
+      businessType: "",
 
       email: "",
 
@@ -23,31 +22,26 @@ export default function SetupPage() {
 
       phoneNumberId: "",
 
-      // AUTOMATION
+      defaultMessage: "",
 
-      exams: "",
+      followupMessage: "",
 
-      feeStructure: "",
-
-      batchDates: "",
-
-      hostelInfo: "",
-
-      locationText: "",
-
-      locationLink: "",
-
-      whyJoin: "",
-
-      scholarshipInfo: "",
-
-      contactNumber: "",
+      followupDays: 3,
     });
+
+  const [keywords, setKeywords] =
+    useState([
+      {
+        keyword: "",
+        reply: "",
+      },
+    ]);
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement |
-      HTMLTextAreaElement
+      HTMLTextAreaElement |
+      HTMLSelectElement
     >
   ) => {
 
@@ -56,6 +50,36 @@ export default function SetupPage() {
       [e.target.name]:
         e.target.value,
     });
+  };
+
+  const addKeyword = () => {
+
+    setKeywords([
+      ...keywords,
+      {
+        keyword: "",
+        reply: "",
+      },
+    ]);
+  };
+
+  const updateKeyword = (
+    index: number,
+    field: string,
+    value: string
+  ) => {
+
+    const updated =
+      [...keywords];
+
+    updated[index] = {
+
+      ...updated[index],
+
+      [field]: value,
+    };
+
+    setKeywords(updated);
   };
 
   const handleSubmit = async (
@@ -74,9 +98,12 @@ export default function SetupPage() {
             "application/json",
         },
 
-        body: JSON.stringify(
-          formData
-        ),
+        body: JSON.stringify({
+
+          ...formData,
+
+          keywords,
+        }),
       }
     );
 
@@ -99,22 +126,20 @@ export default function SetupPage() {
         className="bg-slate-900 p-8 rounded-2xl w-full max-w-2xl space-y-4"
       >
 
-        {/* STEP 1 */}
-
         {step === 1 && (
 
           <>
 
-            <h1 className="text-4xl font-bold mb-6">
+            <h1 className="text-4xl font-bold">
 
               Connect Your Business
 
             </h1>
 
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-400">
 
-              Setup your WhatsApp
-              automation system.
+              Connect your WhatsApp
+              business account.
 
             </p>
 
@@ -124,6 +149,46 @@ export default function SetupPage() {
               className="w-full p-4 rounded-lg bg-slate-800"
               onChange={handleChange}
             />
+
+            <select
+              name="businessType"
+              className="w-full p-4 rounded-lg bg-slate-800"
+              onChange={handleChange}
+            >
+
+              <option value="">
+                Select Business Type
+              </option>
+
+              <option value="coaching">
+                Coaching
+              </option>
+
+              <option value="real_estate">
+                Real Estate
+              </option>
+
+              <option value="cafe">
+                Cafe
+              </option>
+
+              <option value="restaurant">
+                Restaurant
+              </option>
+
+              <option value="gym">
+                Gym
+              </option>
+
+              <option value="clinic">
+                Clinic
+              </option>
+
+              <option value="other">
+                Other
+              </option>
+
+            </select>
 
             <input
               name="email"
@@ -168,90 +233,102 @@ export default function SetupPage() {
           </>
         )}
 
-        {/* STEP 2 */}
-
         {step === 2 && (
 
           <>
 
-            <h1 className="text-4xl font-bold mb-4">
+            <h1 className="text-4xl font-bold">
 
-              Automation Details
+              Configure Automation
 
             </h1>
 
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-400">
 
-              Add details to help
-              our automation system
-              respond better and
-              connect personally
-              with students.
+              Add automatic replies
+              for common customer
+              questions.
 
             </p>
 
             <textarea
-              name="exams"
-              placeholder="Exams & Courses (JEE, NEET, UPSC...)"
+              name="defaultMessage"
+              placeholder="Default Reply"
               className="w-full p-4 rounded-lg bg-slate-800 h-24"
               onChange={handleChange}
             />
 
             <textarea
-              name="feeStructure"
-              placeholder="Fee Structure"
-              className="w-full p-4 rounded-lg bg-slate-800 h-24"
-              onChange={handleChange}
-            />
-
-            <textarea
-              name="batchDates"
-              placeholder="Upcoming Batch Dates"
-              className="w-full p-4 rounded-lg bg-slate-800 h-24"
-              onChange={handleChange}
-            />
-
-            <textarea
-              name="hostelInfo"
-              placeholder="Hostel Information"
-              className="w-full p-4 rounded-lg bg-slate-800 h-24"
-              onChange={handleChange}
-            />
-
-            <textarea
-              name="locationText"
-              placeholder="Institute Location"
+              name="followupMessage"
+              placeholder="Followup Message"
               className="w-full p-4 rounded-lg bg-slate-800 h-24"
               onChange={handleChange}
             />
 
             <input
-              name="locationLink"
-              placeholder="Google Maps Link"
+              name="followupDays"
+              type="number"
+              placeholder="Followup After Days"
               className="w-full p-4 rounded-lg bg-slate-800"
               onChange={handleChange}
             />
 
-            <textarea
-              name="whyJoin"
-              placeholder="Why Students Should Join"
-              className="w-full p-4 rounded-lg bg-slate-800 h-24"
-              onChange={handleChange}
-            />
+            <h2 className="text-xl font-bold">
 
-            <textarea
-              name="scholarshipInfo"
-              placeholder="Scholarship Details"
-              className="w-full p-4 rounded-lg bg-slate-800 h-24"
-              onChange={handleChange}
-            />
+              Keywords & Replies
 
-            <input
-              name="contactNumber"
-              placeholder="Counselor Contact Number"
-              className="w-full p-4 rounded-lg bg-slate-800"
-              onChange={handleChange}
-            />
+            </h2>
+
+            {keywords.map(
+              (
+                item,
+                index
+              ) => (
+
+                <div
+                  key={index}
+                  className="border border-slate-700 rounded-lg p-4 space-y-3"
+                >
+
+                  <input
+                    placeholder="Keyword"
+                    className="w-full p-3 rounded-lg bg-slate-800"
+                    value={item.keyword}
+                    onChange={(e) =>
+                      updateKeyword(
+                        index,
+                        "keyword",
+                        e.target.value
+                      )
+                    }
+                  />
+
+                  <textarea
+                    placeholder="Reply"
+                    className="w-full p-3 rounded-lg bg-slate-800 h-24"
+                    value={item.reply}
+                    onChange={(e) =>
+                      updateKeyword(
+                        index,
+                        "reply",
+                        e.target.value
+                      )
+                    }
+                  />
+
+                </div>
+              )
+            )}
+
+            <button
+              type="button"
+              onClick={addKeyword}
+              className="bg-slate-700 px-4 py-2 rounded-lg"
+            >
+
+              + Add Keyword
+
+            </button>
 
             <button
               className="bg-green-500 w-full p-4 rounded-lg"
